@@ -90,3 +90,33 @@ For open source projects, say how it is licensed.
 
 ## Project status
 If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+## Dependencies
+- Doten: esta libreria nos permitirá cargar a traves del método config() y el objeto path, el archivo .env que necesitemos de acuerdo al entorno deseado.
+- Express: es el framework más popular de Node, y es la librería subyacente para un gran numero de otros frameworks web de Node populares. Proporciona mecanismos para:
+    - La escritura de manejadores de peticiones con diferentes verbos HTTP en diferentes caminos URL (rutas).
+    -Integración de motores de renderización de "vistas" para generar respuestas mediante la introducción de datos de plantilla.
+    - Establecer ajustes de aplicaciones web como qué puerto usa para conectar, y la localización de las plantillas que se utilizan para renderizar la respuesta.
+    - Añadir procesamientos de peticiones "middleware" adicional en cualquier punto dentro de la tubería de manejo de la petición.
+ ## Scripts de NPM creados:
+  -  @types/express/jest/node: is a collection of an application's nodes that share a common business purpose. Use node types to define nodes' properties and to define rules that convert a node type to another node type. Each node is a member of a node type.
+   
+    -@typescript-eslint/eslint-plugin/parser:es un linter de JavaScript que nos servirá para filtrar código TypeScript o JavaScript con el objetivo de escribir un código más óptimo y limpio, bajo las normas que cada participante en un proyecto considere a tener en cuenta.
+    
+    "concurrently": "^7.1.0",
+    - Eslint: es un linter de JavaScript que nos servirá para filtrar código TypeScript o JavaScript con el objetivo de escribir un código más óptimo y limpio, bajo las normas que cada participante en un proyecto considere a tener en cuenta.
+    - Eslint-config-standard: 
+    - Eslint-plugin-import:
+    - Eslint-plugin-node:
+    - Eslint-plugin-promise:
+    - Jest: es una librería que nos permite escribir y ejecutar tests, es desarrollada por Facebook y usada por plataformas como airbnb, twitter, spotify, resuelve, etc
+    - Nodemon:es una utilidad que monitorea los cambios en el código fuente que se esta desarrollando y automáticamente re inicia el servidor. Es una herramienta muy útil para desarrollo de aplicaciones en nodejs.
+    - Serve: es ideal para almacenar toda la información deseada en bases de datos relacionales, como también para administrar dichos datos sin complicaciones, gracias a su interfaz visual y a las opciones y herramientas que tiene.
+    - Supertest: 
+    - ts-jest:
+    - ts-node:
+    - Typescript:
+    - Webpack:s un empaquetador de módulos, es decir, te permite generar un archivo único con todos aquellos módulos que necesita tu aplicación para funcionar
+    - Webpack-cli:
+    - Webpack-node-externals
+    - Webpack-shell-plugin
+  ##   Las variables de entorno que tendras que crear en .env son el PORT:8000 para poder ejecutar la aplicación.
