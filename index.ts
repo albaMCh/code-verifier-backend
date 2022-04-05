@@ -10,18 +10,30 @@ const port: string | number = process.env.PORT || 8000;
 
 // Define the first Route of APP
 app.get("/", (req: Request, res: Response) => {
-  // Send Hello Word
+  // Send Hello World
   res.send(
-    "Welcome to my API Restful: Express + TS +  Nodemon + Jest + Swagger + Mongoose"
+    "Welcome to my API Restful: Express + TS + Nodemon + Jest + Swagger + Mongoose"
   );
 });
+
 // Define the first Route of APP
-app.get("/hello", (req: Request, res: Response) => {
+app.get("/Goodbye", (req: Request, res: Response) => {
+  // Send Hello World
+  res.status(200).send("Goodbye, word");
+});
+// Define route Hello + name
+app.get("/hello_name", (req: Request, res: Response) => {
+  const query = req.query;
+
+  const { name } = query;
+
+  const defaultName = name || "Anónimo";
   // Send Hello Word
-  res.send("Welcome to GET Route: ¡Hello!");
+
+  res.status(200).send("Hola, " + defaultName);
 });
 
-// Execute APP and Listen Request to PORT
+// Execute APP and Listen Requests to PORT
 app.listen(port, () => {
   console.log(`EXPRESS SERVER: Running at http://localhost:${port}`);
 });
