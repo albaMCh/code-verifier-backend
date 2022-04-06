@@ -7,7 +7,7 @@ export const GetAllUsers = async (): Promise<any[] | undefined> => {
   try {
     const userModel = userEntity()
     // Search all use
-    return await userModel.find({ isDelete: false })
+    return await userModel.find({ isDeleted: false })
   } catch (error) {
     LogError(`[ORM ERROR]: Getting All Users: ${error}`)
   }
