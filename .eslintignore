@@ -1,1 +1,3 @@
-{ "ignorePatterns": ["dis/*/.js"]}
+{ 
+    "ignorePatterns": ["dist/**/*.js"]
+}
