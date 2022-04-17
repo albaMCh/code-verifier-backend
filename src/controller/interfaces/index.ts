@@ -10,5 +10,15 @@ export interface IGoodbyeController {
 }
 
 export interface IUsersController {
-    getUsers(name?:string): Promise<UserResponse[] | undefined>
+    
+    // Read all users from datebases || get User 
+    
+    getUsers(id?: string): Promise<any>
+    // Delete User By ID
+    deleteUser(id?: string): Promise<any>
+    // Create new User
+    createUser(user:any): Promise<any>
+    // Update user
+    updateUser(id:string, user: any): Promise<any>
+
 }

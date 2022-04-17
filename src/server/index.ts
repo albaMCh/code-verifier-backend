@@ -1,7 +1,8 @@
 import express, { Express, Request, Response } from 'express';
+const dotenv = require('dotenv')
 
-// Environment Variables
-import dotenv from 'dotenv';
+// Swagger
+import  SwaggerUi from 'swagger-ui-express';
 
 // Security
 import cors from 'cors';
@@ -10,12 +11,26 @@ import helmet from 'helmet';
 // TODO: HTTPS
 
 import rootRouter from '../routes/index';
+import mongoose from 'mongoose';
 
 // Configuration the .env file
 dotenv.config();
 
 // Create Express APP
 const server: Express = express();
+
+
+// * Swagger Config and route
+server.use(
+  '/docs',
+  SwaggerUi.serve,
+  SwaggerUi.setup(undefined,{
+    swaggerOptions:{
+      url: '/swagger.json',
+      explorer: true
+    }
+  })
+)
 
 // Define SERVER to use "/api" and use rootRouter from 'index.ts in routes
 // From this point onover: http://localhost: 8000/api/...
@@ -27,6 +42,7 @@ server.use(
 server.use(express.static('public'));
 
 // TODO: Mongoose Conection
+mongoose.connect('mongodb://localhost:27017/codeverification')
 
 // *Security Config
 server.use(helmet());
