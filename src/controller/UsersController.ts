@@ -3,7 +3,7 @@ import { IUsersController } from "./interfaces";
 import { LogSuccess, LogError, LogWarning } from "@/utils/logger";
 
 // ORM - Users Collection
-import { deleteUserByID, getAllUsers, getUserByID, createUser, updateUserByID } from "../domain/entities/orm/User.orm"
+import { deleteUserByID, getAllUsers, getUserByID, createUser, updateUserByID, getKatasFromUser } from "../domain/entities/orm/User.orm"
 import { BasicResponse } from "./types";
 
 

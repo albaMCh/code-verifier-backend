@@ -5,8 +5,8 @@ import { IUser } from "../domain/interfaces/IUser.interface";
 import { IAuth } from "../domain/interfaces/IAuth.interface";
 
 // ORM imports
-import { registerUser, loginUser, logoutUser, getUserByID } from "../domain/orm/User.orm";
-import { AuthResponse, ErrorResponse } from "./types";
+import { registerUser, loginUser, logoutUser, getUserByID } from "../domain/entities/orm/User.orm"
+import { ErrorResponse } from "./types";
 
 
 @Route("/api/auth")
