@@ -9,12 +9,15 @@ import { LogInfo } from '../utils/logger';
 import goodbyeRouter from './GoodbyeRouter';
 import { serve } from 'swagger-ui-express';
 import usersRouter from './UserRouter';
+import authRouter from './AuthRouter';
+import katasRouter from './KataRouter';
+
 
 // Server instance
-const server = express();
+let server = express();
 
 // Router instance
-const rootRouter = express.Router();
+let rootRouter = express.Router();
 
 // Activate for requests to http://localhost:8000/api
 // GET: http://localhost:8000/api/
@@ -30,4 +33,10 @@ server.use('/hello', helloRouter); // http://localhost:8000/api/hello --> HelloR
 server.use('/goodbye', goodbyeRouter); // http://localhost:8000/api/goodbye  --> GoodbyeRouter
 // Add more routes to the app
 server.use('/users', usersRouter);  //http://localhost:8000/api/users --> UserRouter
+// Auth routes
+server.use('/auth', authRouter); // http://localhost:8000/api/auth --> AuthRouter
+// Katas routes
+server.use('/katas', katasRouter); // http://localhost:8000/api/katas --> KatasRouter
+
+
 export default server;
