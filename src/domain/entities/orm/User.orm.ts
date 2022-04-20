@@ -130,6 +130,7 @@ export const loginUser = async (auth: IAuth): Promise<any | undefined> => {
         await userModel.findOne({email: auth.email}).then((user: IUser) => {
             userFound = user;
         }).catch((error) => {
+            console.log("-----")
             console.error(`[ERROR Authentication in ORM]: User Not Found`);
             throw new Error(`[ERROR Authentication in ORM]: User Not Found: ${error}`);
         });
@@ -146,11 +147,13 @@ export const loginUser = async (auth: IAuth): Promise<any | undefined> => {
         token = jwt.sign({email: userFound!.email}, secret, {
             expiresIn: "2h" 
         });
+        console.log ("-------")
 
         return {
             user: userFound,
             token: token
         }
+        console.log ("-------")
 
     } catch (error) {
         LogError(`[ORM ERROR]: Creating User: ${error}`);

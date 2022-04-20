@@ -3,8 +3,9 @@ import { IKataController } from "./interfaces";
 import { LogSuccess, LogError, LogWarning } from "../utils/logger";
 
 // ORM - Users Collection
-import { getAllKatas, getKataByID, updateKataByID, deleteKataByID, createKata } from "../domain/orm/Kata.orm";
+import { getAllKatas, getKataByID, updateKataByID, deleteKataByID, createKata } from "../domain/entities/orm/kata.orm";
 import { IKata } from "@/domain/interfaces/IKata.interface";
+import { isShorthandPropertyAssignment } from "typescript";
 
 @Route("/api/katas")
 @Tags("KatasController")
@@ -16,8 +17,13 @@ export class KatasController implements IKataController {
      * @returns All katas o kata found by ID
      */
      @Get("/")
-     public async getKatas(@Query()page: number, @Query()limit: number, @Query()id?: string): Promise<any> {
+     public async getKatas(@Query()page: number, @Query()limit: number, @Query()id?: string, @Query()user?: string, @Query()level?: number, @Query()sortProperty?: string, @Query()sortType?: string): Promise<any> {
          
+
+        // TODO: sortType asc | desc
+
+        // TODO sortProperty valoration | level
+
          let response: any = '';
          
          if(id){
@@ -25,7 +31,7 @@ export class KatasController implements IKataController {
              response = await getKataByID(id);
          }else {
              LogSuccess('[/api/katas] Get All Katas Request')
-             response = await getAllKatas(page, limit);
+             response = await getAllKatas(page, limit, user, level, sortProperty, sortType);
          }
          
          return response;
@@ -82,6 +88,28 @@ export class KatasController implements IKataController {
 
      @Put("/")
      public async updateKata(@Query()id: string, kata: IKata): Promise<any> {
+         
+         let response: any = '';
+         
+         if(id){
+             LogSuccess(`[/api/katas] Update Kata By ID: ${id} `);
+             await updateKataByID(id, kata).then((r) => {
+                 response =  {
+                     message: `Kata with id ${id} updated successfully`
+                 }
+             })
+         }else {
+             LogWarning('[/api/katas] Update Kata Request WITHOUT ID')
+             response = {
+                 message: 'Please, provide an ID to update an existing user'
+             }
+         }
+         
+         return response;
+     }
+
+     @Put("/valoration")
+     public async valorationKata(@Query()id: string, kata: IKata, valoration: number): Promise<any> {
          
          let response: any = '';
          

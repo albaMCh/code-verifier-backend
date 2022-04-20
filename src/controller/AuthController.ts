@@ -6,7 +6,7 @@ import { IAuth } from "../domain/interfaces/IAuth.interface";
 
 // ORM imports
 import { registerUser, loginUser, logoutUser, getUserByID } from "../domain/entities/orm/User.orm"
-import { ErrorResponse } from "./types";
+import { AuthResponse, ErrorResponse } from "./types";
 
 
 @Route("/api/auth")
@@ -34,7 +34,6 @@ export class AuthController implements IAuthController {
         }
         return response;
     }
-
     @Post("/login")
     public async loginUser(auth: IAuth): Promise<any> {
 
@@ -43,7 +42,10 @@ export class AuthController implements IAuthController {
         if(auth){
             LogSuccess(`[/api/auth/login] Login User: ${auth.email} `);
             let data = await loginUser(auth);
+          
+
             response = {
+        
                 token: data.token,
                 message: `Welcome, ${data.user.name}`
             }
@@ -58,6 +60,7 @@ export class AuthController implements IAuthController {
         return response;
 
     }
+
 
     /**
      * Endpoint to retreive the User in the Collection "Users" of DB

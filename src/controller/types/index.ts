@@ -1,15 +1,23 @@
 /**
- * Basic JSON response for controller
+ * Basic JSON response for Controllers
  */
-export type BasicResponse = {
+ export type BasicResponse = {
    message: string
 }
 
-export type UserResponse = {
-   name: string
-};
-
+/**
+* Error JSON response for Controllers
+*/
 export type ErrorResponse = {
-   error: string
+   error: string,
    message: string
 }
+
+/**
+* Auth JSON response for Controllers
+*/
+export type AuthResponse = {
+   message: string,
+   token: string
+}
+

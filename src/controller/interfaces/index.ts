@@ -6,6 +6,11 @@ export interface IHelloController {
     getMessage(name?:string): Promise<BasicResponse>
 }
 
+export interface IGoodbyeController {
+    getMessage(name?:string): Promise<BasicResponse>
+}
+
+
 export interface IUserController {
     // Read all users from database || get User By ID
     getUsers(page: number, limit: number, id?: string): Promise<any>

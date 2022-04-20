@@ -3,6 +3,8 @@ import { kataEntity } from '../../entities/Kata.entity';
 import { LogSuccess, LogError } from "../../../utils/logger";
 import { IKata  } from "../../interfaces/IKata.interface";
 
+import mongoose from "mongoose";
+
 // Environment variables
 import dotenv from 'dotenv';
 
@@ -14,15 +16,41 @@ dotenv.config();
 /**
  * Method to obtain all Katas from Collection "Katas" in Mongo Server
  */
-export const getAllKatas = async (page: number, limit: number): Promise<any[] | undefined> => {
+export const getAllKatas = async (page: number, limit: number, user: string | undefined, level: number | undefined, sortProperty: string | undefined, sortType: string | undefined ): Promise<any[] | undefined> => {
     try {
         let kataModel = kataEntity();
 
         let response: any = {};
 
+        let filters: any = {
+            isDeleted: false
+        };
+
+        if (user) {
+            filters.user = new mongoose.Types.ObjectId(user);
+        }
+
+        if (level) {
+            filters.level = level;
+        }
+
+        // TODO query.sort({ level: 'asc' })
+        // TODO query.sort('-level')
+
+        let sort:string = '-date';
+
+        if (sortProperty) {
+            sort = sortProperty;
+        }
+
+        if (sortType === 'desc') {
+            sort = `-${sort}`;
+        }
+
         // Search all Katas (using pagination)
-        await kataModel.find({isDeleted: false})
+        await kataModel.find(filters)
             .limit(limit)
+            .sort(sort)
             .skip((page - 1) * limit)
             .exec().then((katas: IKata[]) => {
                 response.katas = katas;
@@ -100,5 +128,21 @@ export const updateKataByID = async (id: string, kata: IKata): Promise<any | und
     } catch (error) {
         LogError(`[ORM ERROR]: Updating Kata ${id}: ${error}`);
     }
-
 }
+
+    export const valorationKataByID = async (id: string, kata: IKata, valoration:number ): Promise<any | undefined> => {
+
+        try {
+            
+            let kataModel = kataEntity();
+    
+            // Update Kata
+            return await kataModel.findByIdAndUpdate(id, kata);
+    
+        } catch (error) {
+            LogError(`[ORM ERROR]: Updating Kata ${id}: ${error}`);
+        }
+    
+    }
+
+

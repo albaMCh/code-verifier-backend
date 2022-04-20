@@ -73,6 +73,7 @@ authRouter.route('/login')
 
             // Obtain Response
             const response: any = await controller.loginUser(auth);
+            
 
             // Send to the client the response which includes the JWT to authorize requests
             return res.status(200).send(response);
