@@ -1,12 +1,13 @@
-import { kataEntity } from '../../entities/Kata.entity';
+import { kataEntity } from "../../entities/Kata.entity";
 
 import { LogSuccess, LogError } from "../../../utils/logger";
-import { IKata  } from "../../interfaces/IKata.interface";
+import { IKata } from "../../interfaces/IKata.interface";
 
 import mongoose from "mongoose";
 
 // Environment variables
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
+import { userEntity } from "../User.entity";
 
 // Configuration of environment variables
 dotenv.config();
@@ -16,133 +17,200 @@ dotenv.config();
 /**
  * Method to obtain all Katas from Collection "Katas" in Mongo Server
  */
-export const getAllKatas = async (page: number, limit: number, user: string | undefined, level: number | undefined, sortProperty: string | undefined, sortType: string | undefined ): Promise<any[] | undefined> => {
-    try {
-        let kataModel = kataEntity();
+export const getAllKatas = async (
+  page: number,
+  limit: number,
+  user: string | undefined,
+  level: number | undefined,
+  sortProperty: string | undefined,
+  sortType: string | undefined
+): Promise<any[] | undefined> => {
+  try {
+    let kataModel = kataEntity();
 
-        let response: any = {};
+    let response: any = {};
 
-        let filters: any = {
-            isDeleted: false
-        };
+    let filters: any = {
+      isDeleted: false,
+    };
 
-        if (user) {
-            filters.user = new mongoose.Types.ObjectId(user);
-        }
-
-        if (level) {
-            filters.level = level;
-        }
-
-        // TODO query.sort({ level: 'asc' })
-        // TODO query.sort('-level')
-
-        let sort:string = '-date';
-
-        if (sortProperty) {
-            sort = sortProperty;
-        }
-
-        if (sortType === 'desc') {
-            sort = `-${sort}`;
-        }
-
-        // Search all Katas (using pagination)
-        await kataModel.find(filters)
-            .limit(limit)
-            .sort(sort)
-            .skip((page - 1) * limit)
-            .exec().then((katas: IKata[]) => {
-                response.katas = katas;
-            });
-        
-        // Count total documents in collection "Katas"
-        await kataModel.countDocuments().then((total: number) => {
-            response.totalPages = Math.ceil(total / limit);
-            response.currentPage = page;
-        });
-
-        return response;
-
-    } catch (error) {
-        LogError(`[ORM ERROR]: Getting All Katas: ${error}`);
+    if (user) {
+      filters.user = new mongoose.Types.ObjectId(user);
     }
-}
+
+    if (level) {
+      filters.level = level;
+    }
+
+    // TODO query.sort({ level: 'asc' })
+    // TODO query.sort('-level')
+
+    let sort: string = "-date";
+
+    if (sortProperty) {
+      sort = sortProperty;
+    }
+
+    if (sortType === "desc") {
+      sort = `-${sort}`;
+    }
+
+    // Search all Katas (using pagination)
+    await kataModel
+      .find(filters)
+      .limit(limit)
+      .sort(sort)
+      .skip((page - 1) * limit)
+      .exec()
+      .then((katas: IKata[]) => {
+        response.katas = katas;
+      });
+
+    // Count total documents in collection "Katas"
+    await kataModel.countDocuments().then((total: number) => {
+      response.totalPages = Math.ceil(total / limit);
+      response.currentPage = page;
+    });
+
+    return response;
+  } catch (error) {
+    LogError(`[ORM ERROR]: Getting All Katas: ${error}`);
+  }
+};
 
 // - Get Kata By ID
-export const getKataByID = async (id: string) : Promise<any | undefined> => {
+export const getKataByID = async (id: string): Promise<any | undefined> => {
+  try {
+    let kataModel = kataEntity();
 
-    try {
-        let kataModel = kataEntity();
-
-        // Search Kata By ID
-        return await kataModel.findById(id)
-
-    } catch (error) {
-        LogError(`[ORM ERROR]: Getting Kata By ID: ${error}`);
-    }
-
-}
+    // Search Kata By ID
+    return await kataModel.findById(id);
+  } catch (error) {
+    LogError(`[ORM ERROR]: Getting Kata By ID: ${error}`);
+  }
+};
 
 // - Delete Kata By ID
-export const deleteKataByID = async (id: string): Promise<any | undefined> => {
+export const deleteKataByID = async (
+  id: string,
+  userID: any,
+  userRole: any
+): Promise<any | undefined> => {
+  try {
+    const userModel = userEntity();
+    const kataModel = kataEntity();
 
-    try {
-        let kataModel = kataEntity();
-
-        // Delete Kata BY ID
-        return await kataModel.deleteOne({ _id: id })
-
-    } catch (error) {
-        LogError(`[ORM ERROR]: Deleting Kata By ID: ${error}`);
-    }
-
-}
+    // Delete Kata BY ID
+    return kataModel.findById(id).then(async (kataToDelete: any) => {
+      if (userID == kataToDelete.creator || userRole === "Administrator") {
+        await kataModel.findByIdAndDelete(id);
+        return userModel.findByIdAndUpdate(userID, {
+          $pull: { katas: { $elemMatch: id } },
+        });
+      } else {
+        return {
+          message: "You are not allow to delete this Kata",
+        };
+      }
+    });
+  } catch (error) {
+    LogError(`[ORM ERROR]: Deleting Kata By ID: ${error}`);
+  }
+};
 
 // - Create New Kata
 export const createKata = async (kata: IKata): Promise<any | undefined> => {
+  try {
+    const userModel = userEntity();
+    const kataModel = kataEntity();
+    // Create / Insert new Kata
 
-    try {
-        
-        let kataModel = kataEntity();
-
-        // Create / Insert new Kata
-        return await kataModel.create(kata);
-
-    } catch (error) {
-        LogError(`[ORM ERROR]: Creating Kata: ${error}`);
-    }
-
-}
+    return kataModel.create(kata).then(async (kataCreated: any) => {
+      return userModel.findByIdAndUpdate(kata.creator, {
+        $push: { katas: kataCreated.id },
+      });
+    });
+  } catch (error) {
+    LogError(`[ORM ERROR]: Creating Kata: ${error}`);
+  }
+};
 
 // - Update Kata By ID
-export const updateKataByID = async (id: string, kata: IKata): Promise<any | undefined> => {
+export const updateKataByID = async (
+  id: string,
+  kata: IKata,
+  userID: any,
+  userRole: any
+): Promise<any | undefined> => {
+  try {
+    const kataModel = kataEntity();
 
-    try {
-        
-        let kataModel = kataEntity();
+    return kataModel.findById(id).then(async (kataToUpdate: any) => {
+      if (userID == kataToUpdate.creator || userRole === "Administrator") {
+        return kataModel.findByIdAndUpdate(id, {
+          name: kata.name,
+          description: kata.description,
+          leve: kata.level,
+          solution: kata.solution,
+        });
+      } else {
+        return {
+          message: "You are not allow to update this Kata",
+        };
+      }
+    });
+  } catch (error) {
+    LogError(`[ORM ERROR]: Updating Kata ${id} error: ${error}`);
+  }
+};
 
-        // Update Kata
-        return await kataModel.findByIdAndUpdate(id, kata);
+// -Valorate Kata By ID
+export const valorateKataByID = async (
+  id: string,
+  vote: any,
+  userID: any
+): Promise<any | undefined> => {
+  try {
+    const kataModel = kataEntity();
+    const response: any = {};
+    // First find kata by Kata
+    return kataModel.findById(id).then(async (kataToVote: any) => {
+      if (kataToVote.participants.indexOf(userID) !== -1) {
+        const oldStars = kataToVote.stars.average;
+        const totalVotes: any[] = kataToVote.stars.users;
+        const newStars =
+          (+oldStars * +totalVotes.length + +vote) / (+totalVotes.length + 1);
+        response.kata = await kataModel.findByIdAndUpdate(id, {
+          "stars.average": newStars,
+          $push: { "stars.users": { user: userID, stars: vote } },
+        });
+      } else {
+        response.message = "You cannot update this Kata";
+      }
+    });
+    return response;
+  } catch (error) {
+    LogError(`[ORM ERROR]: Voting Kata ${id} error: ${error}`);
+  }
+};
 
-    } catch (error) {
-        LogError(`[ORM ERROR]: Updating Kata ${id}: ${error}`);
-    }
-}
-
-    export const valorationKataByID = async (id: string, kata: IKata, valoration:number ): Promise<any | undefined> => {
-
-        try {
-            
-            let kataModel = kataEntity();
-    
-            // Update Kata
-            return await kataModel.findByIdAndUpdate(id, kata);
-    
-        } catch (error) {
-            LogError(`[ORM ERROR]: Updating Kata ${id}: ${error}`);
-        }
-    
-    }
-
-
+// -Solve Kata By ID
+export const solveKataByID = async (
+  id: string,
+  vote: any,
+  userID: any
+): Promise<any | undefined> => {
+  try {
+    const kataModel = kataEntity();
+    // First find kata by Kata
+    return kataModel
+      .findByIdAndUpdate(id, { $push: { participants: userID } })
+      .then(async (kataToSolve: any) => {
+        return {
+          message: kataToSolve.solution,
+        };
+      });
+  } catch (error) {
+    LogError(`[ORM ERROR]: Voting Kata ${id} error: ${error}`);
+  }
+};

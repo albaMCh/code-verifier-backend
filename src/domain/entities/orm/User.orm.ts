@@ -5,13 +5,13 @@ import { IUser } from "../../interfaces/IUser.interface";
 import { IAuth } from "../../interfaces/IAuth.interface";
 
 // Environment variables
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 
 // BCRYPT for passwords
-import bcrypt from 'bcrypt';
+import bcrypt from "bcrypt";
 
 // JWT
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 import { UserResponse } from "../../types/UserResponse.type";
 import { kataEntity } from "../../entities/Kata.entity";
 import { IKata } from "../../interfaces/IKata.interface";
@@ -21,194 +21,150 @@ import mongoose from "mongoose";
 dotenv.config();
 
 // Obtain Secret key to generate JWT
-const secret = process.env.SECRETKEY || 'MYSECRETKEY';
+const secret = process.env.SECRETKEY || "MYSECRETKEY";
 
 // CRUD
 
 /**
  * Method to obtain all Users from Collection "Users" in Mongo Server
  */
-export const getAllUsers = async (page: number, limit: number): Promise<any[] | undefined> => {
-    try {
-        let userModel = userEntity();
+export const getAllUsers = async (
+  page: number,
+  limit: number
+): Promise<any[] | undefined> => {
+  try {
+    let userModel = userEntity();
 
-        let response: any = {};
+    let response: any = {};
 
-        // Search all users (using pagination)
-        await userModel.find({isDeleted: false})
-            .select('name email age katas')
-            .limit(limit)
-            .skip((page - 1) * limit)
-            .exec().then((users: IUser[]) => {
-                response.users = users;
-            });
-        
-        // Count total documents in collection "Users"
-        await userModel.countDocuments().then((total: number) => {
-            response.totalPages = Math.ceil(total / limit);
-            response.currentPage = page;
-        });
+    // Search all users (using pagination)
+    await userModel
+      .find({ isDeleted: false })
+      .select("name email age katas")
+      .limit(limit)
+      .skip((page - 1) * limit)
+      .exec()
+      .then((users: IUser[]) => {
+        response.users = users;
+      });
 
-        return response;
+    // Count total documents in collection "Users"
+    await userModel.countDocuments().then((total: number) => {
+      response.totalPages = Math.ceil(total / limit);
+      response.currentPage = page;
+    });
 
-    } catch (error) {
-        LogError(`[ORM ERROR]: Getting All Users: ${error}`);
-    }
-}
+    return response;
+  } catch (error) {
+    LogError(`[ORM ERROR]: Getting All Users: ${error}`);
+  }
+};
 
 // - Get User By ID
-export const getUserByID = async (id: string) : Promise<any | undefined> => {
+export const getUserByID = async (id: string): Promise<any | undefined> => {
+  try {
+    let userModel = userEntity();
 
-    try {
-        let userModel = userEntity();
-
-        // Search User By ID
-        return await userModel.findById(id).select('name email age katas');
-
-    } catch (error) {
-        LogError(`[ORM ERROR]: Getting User By ID: ${error}`);
-    }
-
-}
+    // Search User By ID
+    return userModel.findById(id).select("name email age katas");
+  } catch (error) {
+    LogError(`[ORM ERROR]: Getting User By ID: ${error}`);
+  }
+};
+// -Get User By Name OR Email
+export const getUserByNameOrEmail = async (
+  name: string,
+  email: string
+): Promise<any | undefined> => {
+  try {
+    const userModel = userEntity();
+    // Search User by Name
+    return await userModel.findOne({
+      $or: [
+        { name: { $regex: new RegExp(name, "i") } },
+        { email: { $regex: new RegExp(email, "i") } },
+      ],
+    });
+  } catch (error) {
+    LogError(`[ORM ERROR]: Getting User by Name: ${error}`);
+  }
+};
 
 // - Delete User By ID
 export const deleteUserByID = async (id: string): Promise<any | undefined> => {
+  try {
+    let userModel = userEntity();
 
-    try {
-        let userModel = userEntity();
-
-        // Delete User BY ID
-        return await userModel.deleteOne({ _id: id })
-
-    } catch (error) {
-        LogError(`[ORM ERROR]: Deleting User By ID: ${error}`);
-    }
-
-}
+    // Delete User BY ID
+    return userModel.deleteOne({ _id: id });
+  } catch (error) {
+    LogError(`[ORM ERROR]: Deleting User By ID: ${error}`);
+  }
+};
 
 // - Update User By ID
-export const updateUserByID = async (id: string, user: any): Promise<any | undefined> => {
+export const updateUserByID = async (
+  id: string,
+  user: any
+): Promise<any | undefined> => {
+  try {
+    const userModel = userEntity();
 
-    try {
-        
-        let userModel = userEntity();
-
-        // Update User
-        return await userModel.findByIdAndUpdate(id, user);
-
-    } catch (error) {
-        LogError(`[ORM ERROR]: Updating User ${id}: ${error}`);
-    }
-
-}
-
-// Register User
-export const registerUser = async (user: IUser): Promise<any | undefined> => {
-    try {
-        
-        let userModel = userEntity();
-
-        // Create / Insert new User
-        return await userModel.create(user);
-
-    } catch (error) {
-        LogError(`[ORM ERROR]: Creating User: ${error}`);
-    }
-
-}
-
-// Login User
-export const loginUser = async (auth: IAuth): Promise<any | undefined> => {
-    try {
-        
-        let userModel = userEntity();
-
-        let userFound: IUser | undefined = undefined;
-        let token = undefined;
-
-        // Check if user exists by Unique Email
-        await userModel.findOne({email: auth.email}).then((user: IUser) => {
-            userFound = user;
-        }).catch((error) => {
-            console.log("-----")
-            console.error(`[ERROR Authentication in ORM]: User Not Found`);
-            throw new Error(`[ERROR Authentication in ORM]: User Not Found: ${error}`);
-        });
-
-        // Check if Password is Valid (compare with bcrypt)
-        let validPassword = bcrypt.compareSync(auth.password, userFound!.password);
-
-        if(!validPassword){
-            console.error(`[ERROR Authentication in ORM]: Password Not Valid`);
-            throw new Error(`[ERROR Authentication in ORM]: Password Not Valid`);
-        }
-
-        // Generate our JWT
-        token = jwt.sign({email: userFound!.email}, secret, {
-            expiresIn: "2h" 
-        });
-        console.log ("-------")
-
-        return {
-            user: userFound,
-            token: token
-        }
-        console.log ("-------")
-
-    } catch (error) {
-        LogError(`[ORM ERROR]: Creating User: ${error}`);
-    }
-}
-
-// Logout User
-export const logoutUser = async (): Promise<any | undefined> => {
-    // TODO: NOT IMPLEMENTED
-}
-
-
-
+    // Update User
+    return userModel.findByIdAndUpdate(id, user);
+  } catch (error) {
+    LogError(`[ORM ERROR]: Updating User ${id}: ${error}`);
+  }
+};
 
 /**
  * Method to obtain all Users from Collection "Users" in Mongo Server
  */
- export const getKatasFromUser = async (page: number, limit: number, id:string ): Promise<any[] | undefined> => {
-    try {
-        let userModel = userEntity();
-        let katasModel = kataEntity();
+export const getKatasFromUser = async (
+  page: number,
+  limit: number,
+  id: string
+): Promise<any[] | undefined> => {
+  try {
+    let userModel = userEntity();
+    let katasModel = kataEntity();
 
-        let katasFound: IKata[] = [];
+    let katasFound: IKata[] = [];
 
-        let response: any = {
-            katas: []
-        };
+    let response: any = {
+      katas: [],
+    };
 
-        console.log('User ID', id);
+    console.log("User ID", id);
 
-        await userModel.findById(id).then(async (user: IUser) => {
-            response.user = user.email;
-            
-            // console.log('Katas from User', user.katas);
+    await userModel
+      .findById(id)
+      .then(async (user: IUser) => {
+        response.user = user.email;
 
-            // Create types to search
-            let objectIds:mongoose.Types.ObjectId[]  = [];
-            user.katas.forEach((kataID: string) => {
-                let objectID = new mongoose.Types.ObjectId(kataID);
-                objectIds.push(objectID);
-            });
+        // console.log('Katas from User', user.katas);
 
-            await katasModel.find({"_id": {"$in": objectIds }}).then((katas: IKata[]) => {
-                katasFound = katas;
-            });
+        // Create types to search
+        let objectIds: mongoose.Types.ObjectId[] = [];
+        user.katas.forEach((kataID: string) => {
+          let objectID = new mongoose.Types.ObjectId(kataID);
+          objectIds.push(objectID);
+        });
 
-        }).catch((error) => {
-            LogError(`[ORM ERROR]: Obtaining User: ${error}`);
-        })
+        return katasModel
+          .find({ _id: { $in: objectIds } })
+          .then((katas: IKata[]) => {
+            katasFound = katas;
+          });
+      })
+      .catch((error) => {
+        LogError(`[ORM ERROR]: Obtaining User: ${error}`);
+      });
 
-        response.katas = katasFound;
+    response.katas = katasFound;
 
-        return response;
-
-    } catch (error) {
-        LogError(`[ORM ERROR]: Getting All Users: ${error}`);
-    }
-}
+    return response;
+  } catch (error) {
+    LogError(`[ORM ERROR]: Getting All Users: ${error}`);
+  }
+};
