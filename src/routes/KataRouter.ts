@@ -60,9 +60,15 @@ katasRouter
     // Obtain a Query Param (ID)
     const id: any = req?.query?.id;
 
+    console.log("-------------");
+    console.log("id:", id);
+
     const controller: KatasController = new KatasController();
 
     const existingKata = await controller.getKatas(0, 0, id);
+
+    console.log("------------");
+    console.log("Kata:", existingKata);
 
     if (!existingKata) {
       return res.status(404).send({
@@ -81,7 +87,10 @@ katasRouter
     const solution: string = req?.body?.solution || "";
     const participants: string[] = req?.body?.participants || [];
 
-    if (name && description && level && solution) {
+    console.log("------------");
+    console.log(level);
+
+    if (name && description && level) {
       // Controller Instance to excute method
 
       let kata: IKata = {
@@ -207,6 +216,46 @@ katasRouter
     const controller: KatasController = new KatasController();
     // Obtain Response
     const response: any = await controller.valorationKata(id, vote, user.id);
+    // Send to the client the response
+    return res.send(response);
+  });
+
+// http://localhost:8000/api/katas/vote
+katasRouter
+  .route("/vote")
+  // PUT
+  .put(verifyToken, async (req: Request, res: Response) => {
+    // Obtain a Query Param
+    const id: any = req?.query.id;
+    const vote: any = req?.query.vote;
+    const token: any = req.headers["x-access-token"];
+    const secret = process.env.SECRETKEY || "MYSECRETKEY";
+    const user: any = jwt.verify(token, secret);
+    LogInfo(`Query Params: ${id}, ${vote}`);
+    // Controller Instance to execute method
+    const controller: KatasController = new KatasController();
+    // Obtain Response
+    const response: any = await controller.valorationKata(id, vote, user.id);
+    // Send to the client the response
+    return res.send(response);
+  });
+
+// http://localhost:8000/api/katas/solve
+katasRouter
+  .route("/solve")
+  // PUT
+  .put(jsonParser, verifyToken, async (req: Request, res: Response) => {
+    // Obtain a Query Param
+    const id: any = req?.query.id;
+    const solution: string = req?.body?.solution;
+    const token: any = req.headers["x-access-token"];
+    const secret = process.env.SECRETKEY || "MYSECRETKEY";
+    const user: any = jwt.verify(token, secret);
+    LogInfo(`Query Params: ${id}`);
+    // Controller Instance to execute method
+    const controller: KatasController = new KatasController();
+    // Obtain Response
+    const response: any = await controller.solveKata(id, solution, user.id);
     // Send to the client the response
     return res.send(response);
   });

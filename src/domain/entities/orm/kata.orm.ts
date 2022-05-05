@@ -100,17 +100,21 @@ export const deleteKataByID = async (
     const userModel = userEntity();
     const kataModel = kataEntity();
 
+    console.log("Kata a eliminar:", id);
+
     // Delete Kata BY ID
     return kataModel.findById(id).then(async (kataToDelete: any) => {
+      console.log("Kata encontrada en base de datos:", kataToDelete);
+
+      console.log("Id del token:", userID);
       if (userID == kataToDelete.creator || userRole === "Administrator") {
         await kataModel.findByIdAndDelete(id);
+        console.log("Kata elininada:", id);
         return userModel.findByIdAndUpdate(userID, {
-          $pull: { katas: { $elemMatch: id } },
+          $pull: { katas: { id } },
         });
       } else {
-        return {
-          message: "You are not allow to delete this Kata",
-        };
+        throw new Error("You are not allowed to delete this Kata");
       }
     });
   } catch (error) {
@@ -145,12 +149,15 @@ export const updateKataByID = async (
   try {
     const kataModel = kataEntity();
 
+    console.log("---------");
+    console.log("Level a persistir:", kata.level);
+
     return kataModel.findById(id).then(async (kataToUpdate: any) => {
       if (userID == kataToUpdate.creator || userRole === "Administrator") {
         return kataModel.findByIdAndUpdate(id, {
           name: kata.name,
           description: kata.description,
-          leve: kata.level,
+          level: kata.level,
           solution: kata.solution,
         });
       } else {
@@ -203,8 +210,18 @@ export const solveKataByID = async (
   try {
     const kataModel = kataEntity();
     // First find kata by Kata
+
+    const existingKata = await getKataByID(id);
+
+    const query: any = {};
+
+    if (existingKata.participants.indexOf(userID) === -1) {
+      query.$push = { participants: userID };
+      query.intents = existingKata.intents + 1;
+    }
+
     return kataModel
-      .findByIdAndUpdate(id, { $push: { participants: userID } })
+      .findByIdAndUpdate(id, query)
       .then(async (kataToSolve: any) => {
         return {
           message: kataToSolve.solution,

@@ -178,7 +178,7 @@ export class KatasController implements IKataController {
   @Put("/solve")
   public async solveKata(
     @Query() id: string,
-    @Query() solution: any,
+    @Query() solution: any = " ",
     @Query() userID: any
   ): Promise<any> {
     let response: any = "";
