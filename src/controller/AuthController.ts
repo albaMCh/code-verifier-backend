@@ -10,33 +10,47 @@ import {
   loginUser,
   logoutUser,
 } from "../domain/entities/orm/Auth.orm";
-import { getUserByID } from "../domain/entities/orm/User.orm";
+import {
+  getUserByID,
+  getUserByNameOrEmail,
+} from "../domain/entities/orm/User.orm";
 import { AuthResponse, ErrorResponse } from "./types";
 
 @Route("/api/auth")
 @Tags("AuthController")
 export class AuthController implements IAuthController {
   @Post("/register")
-  public async registerUser(user: IUser): Promise<any> {
+  public async registerUser(@Query() user: IUser): Promise<any> {
     let response: any = "";
-
+    let userFound: boolean = false;
     if (user) {
-      LogSuccess(`[/api/auth/register] Register New User: ${user.email} `);
-      await registerUser(user).then((r) => {
-        LogSuccess(`[/api/auth/register] Created User: ${user.email} `);
-        response = {
-          message: `User created successfully: ${user.name}`,
-        };
+      await getUserByNameOrEmail(user.name, user.email).then((r) => {
+        if (r) {
+          userFound = true;
+          LogWarning("[/api/auth/register] User Already registered");
+          return {
+            message: `User Already registered: ${user.name}`,
+          };
+        }
       });
+      if (!userFound) {
+        LogSuccess(`[/api/auth/register] register user:  ${user.email}`);
+        await registerUser(user).then((r) => {
+          LogSuccess(`[/api/auth/register] Create User: ${user.email}`);
+          response = {
+            message: `User created succesfully: ${user.name}`,
+          };
+        });
+      }
     } else {
-      LogWarning("[/api/auth/register] Register needs User Entity");
-      response = {
-        message:
-          "User not Registered: Please, provide a User Entity to create one",
+      LogWarning("[/api/auth/register] Register user without USER");
+      return {
+        message: "Pelase, provide the user to register. ",
       };
     }
     return response;
   }
+
   @Post("/login")
   public async loginUser(auth: IAuth): Promise<any> {
     let response: AuthResponse | ErrorResponse | undefined;
