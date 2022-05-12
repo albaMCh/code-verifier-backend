@@ -33,9 +33,10 @@ export class KatasController implements IKataController {
     @Query() sortProperty?: string,
     @Query() sortType?: string
   ): Promise<any> {
-    // TODO: sortType asc | desc
-
-    // TODO sortProperty valoration | level
+    console.log("Page:", page);
+    console.log("sortProperty:", sortProperty);
+    console.log("sortType:", sortType);
+    console.log("limit:", limit);
 
     let response: any = "";
 
@@ -87,14 +88,14 @@ export class KatasController implements IKataController {
   @Delete("/")
   public async deleteKata(
     @Query() id?: string,
-    userID?: any,
+    userId?: any,
     userRole?: any
   ): Promise<any> {
     let response: any = "";
 
     if (id) {
       LogSuccess(`[/api/katas] Delete Kata By ID: ${id} `);
-      await deleteKataByID(id, userID, userRole).then((r) => {
+      await deleteKataByID(id, userId, userRole).then((r) => {
         response = {
           message: `Kata with id ${id} deleted successfully`,
         };
@@ -113,14 +114,14 @@ export class KatasController implements IKataController {
   public async updateKata(
     @Query() id: string,
     kata: IKata,
-    userID?: any,
+    userId?: any,
     userRole?: any
   ): Promise<any> {
     let response: any = "";
 
     if (id) {
       LogSuccess(`[/api/katas] Update Kata By ID: ${id} `);
-      await updateKataByID(id, kata, userID, userRole).then((r) => {
+      await updateKataByID(id, kata, userId, userRole).then((r) => {
         response = {
           message: `Kata with id ${id} updated successfully`,
         };
@@ -143,18 +144,26 @@ export class KatasController implements IKataController {
   public async valorationKata(
     @Query() id: string,
     valoration: number,
-    userID: string
+    userId: string
   ): Promise<any> {
     let response: any = "";
 
     if (id && valoration) {
       LogSuccess(`[/api/katas] Valoration Kata By ID: ${id} `);
 
-      await valorateKataByID(id, valoration, userID).then((r) => {
-        response = {
-          message: `Kata with id ${id} updated successfully`,
-        };
-      });
+      await valorateKataByID(id, valoration, userId)
+        .then((r) => {
+          console.log("No deberíamos haber entrado");
+          response = {
+            message: `Kata with id ${id} updated successfully`,
+          };
+        })
+        .catch((error) => {
+          response = {
+            status: 422,
+            message: error.message,
+          };
+        });
     } else {
       LogWarning("[/api/katas] Update Kata Request WITHOUT ID");
       response = {
@@ -179,12 +188,12 @@ export class KatasController implements IKataController {
   public async solveKata(
     @Query() id: string,
     @Query() solution: any = " ",
-    @Query() userID: any
+    @Query() userId: any
   ): Promise<any> {
     let response: any = "";
     if (id && solution) {
       LogSuccess(`[/api/katas] Solving Kata by ID: ${id}`);
-      await solveKataByID(id, solution, userID).then((r) => {
+      await solveKataByID(id, solution, userId).then((r) => {
         response = {
           message: r.message,
         };

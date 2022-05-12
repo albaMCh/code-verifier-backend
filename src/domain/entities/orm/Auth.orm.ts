@@ -84,6 +84,7 @@ export const loginUser = async (auth: IAuth): Promise<any | undefined> => {
     return {
       user: userFound,
       token: token,
+      id: userId,
     };
     console.log("-------");
   } catch (error) {

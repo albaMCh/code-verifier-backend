@@ -237,7 +237,7 @@ katasRouter
     // Obtain Response
     const response: any = await controller.valorationKata(id, vote, user.id);
     // Send to the client the response
-    return res.send(response);
+    return res.status(response.status || 200).send(response);
   });
 
 // http://localhost:8000/api/katas/solve

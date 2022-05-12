@@ -42,10 +42,12 @@ export const getAllKatas = async (
       filters.level = level;
     }
 
-    // TODO query.sort({ level: 'asc' })
+    //TODOquery.sort({ level: 'asc' })
     // TODO query.sort('-level')
 
-    let sort: string = "-date";
+    let sort: string = "-data";
+
+    console.log("sortProperty:", sortProperty);
 
     if (sortProperty) {
       sort = sortProperty;
@@ -54,6 +56,11 @@ export const getAllKatas = async (
     if (sortType === "desc") {
       sort = `-${sort}`;
     }
+
+    console.log("Sort:", sort);
+
+    // TODO: Eliminar al terminar
+    sort = "-stars.average";
 
     // Search all Katas (using pagination)
     await kataModel
@@ -93,7 +100,7 @@ export const getKataByID = async (id: string): Promise<any | undefined> => {
 // - Delete Kata By ID
 export const deleteKataByID = async (
   id: string,
-  userID: any,
+  userId: any,
   userRole: any
 ): Promise<any | undefined> => {
   try {
@@ -106,11 +113,11 @@ export const deleteKataByID = async (
     return kataModel.findById(id).then(async (kataToDelete: any) => {
       console.log("Kata encontrada en base de datos:", kataToDelete);
 
-      console.log("Id del token:", userID);
-      if (userID == kataToDelete.creator || userRole === "Administrator") {
+      console.log("Id del token:", userId);
+      if (userId == kataToDelete.creator || userRole === "Administrator") {
         await kataModel.findByIdAndDelete(id);
         console.log("Kata elininada:", id);
-        return userModel.findByIdAndUpdate(userID, {
+        return userModel.findByIdAndUpdate(userId, {
           $pull: { katas: { id } },
         });
       } else {
@@ -143,7 +150,7 @@ export const createKata = async (kata: IKata): Promise<any | undefined> => {
 export const updateKataByID = async (
   id: string,
   kata: IKata,
-  userID: any,
+  userId: any,
   userRole: any
 ): Promise<any | undefined> => {
   try {
@@ -153,7 +160,7 @@ export const updateKataByID = async (
     console.log("Level a persistir:", kata.level);
 
     return kataModel.findById(id).then(async (kataToUpdate: any) => {
-      if (userID == kataToUpdate.creator || userRole === "Administrator") {
+      if (userId == kataToUpdate.creator || userRole === "Administrator") {
         return kataModel.findByIdAndUpdate(id, {
           name: kata.name,
           description: kata.description,
@@ -175,29 +182,42 @@ export const updateKataByID = async (
 export const valorateKataByID = async (
   id: string,
   vote: any,
-  userID: any
+  userId: any
 ): Promise<any | undefined> => {
   try {
     const kataModel = kataEntity();
     const response: any = {};
     // First find kata by Kata
-    return kataModel.findById(id).then(async (kataToVote: any) => {
-      if (kataToVote.participants.indexOf(userID) !== -1) {
-        const oldStars = kataToVote.stars.average;
-        const totalVotes: any[] = kataToVote.stars.users;
-        const newStars =
-          (+oldStars * +totalVotes.length + +vote) / (+totalVotes.length + 1);
-        response.kata = await kataModel.findByIdAndUpdate(id, {
-          "stars.average": newStars,
-          $push: { "stars.users": { user: userID, stars: vote } },
-        });
-      } else {
-        response.message = "You cannot update this Kata";
+    await kataModel.findById(id).then(async (kataToVote: any) => {
+      if (kataToVote.participants.indexOf(userId) === -1) {
+        response.message =
+          "You cannot update this kata as you are not participating in it";
+        throw new Error(response.message);
       }
+
+      const alreadyVoted = kataToVote.stars.users.find((user: any) => {
+        return user.user === userId;
+      });
+
+      if (!!alreadyVoted) {
+        response.message = "You already voted this kata before";
+        throw new Error(response.message);
+      }
+
+      const oldStars = kataToVote.stars.average;
+      const totalVotes: any[] = kataToVote.stars.users;
+      const newStars =
+        (+oldStars * +totalVotes.length + +vote) / (+totalVotes.length + 1);
+      response.kata = await kataModel.findByIdAndUpdate(id, {
+        "stars.average": newStars,
+        $push: { "stars.users": { user: userId, stars: vote } },
+      });
     });
+
     return response;
-  } catch (error) {
+  } catch (error: any) {
     LogError(`[ORM ERROR]: Voting Kata ${id} error: ${error}`);
+    throw new Error(error.message);
   }
 };
 
@@ -205,7 +225,7 @@ export const valorateKataByID = async (
 export const solveKataByID = async (
   id: string,
   vote: any,
-  userID: any
+  userId: any
 ): Promise<any | undefined> => {
   try {
     const kataModel = kataEntity();
@@ -215,8 +235,8 @@ export const solveKataByID = async (
 
     const query: any = {};
 
-    if (existingKata.participants.indexOf(userID) === -1) {
-      query.$push = { participants: userID };
+    if (existingKata.participants.indexOf(userId) === -1) {
+      query.$push = { participants: userId };
       query.intents = existingKata.intents + 1;
     }
 

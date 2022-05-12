@@ -1,23 +1,23 @@
 /**
  * Basic JSON response for Controllers
  */
- export type BasicResponse = {
-   message: string
-}
+export type BasicResponse = {
+  message: string;
+};
 
 /**
-* Error JSON response for Controllers
-*/
+ * Error JSON response for Controllers
+ */
 export type ErrorResponse = {
-   error: string,
-   message: string
-}
+  error: string;
+  message: string;
+};
 
 /**
-* Auth JSON response for Controllers
-*/
+ * Auth JSON response for Controllers
+ */
 export type AuthResponse = {
-   message: string,
-   token: string
-}
-
+  message: string;
+  token: string;
+  userId: String;
+};

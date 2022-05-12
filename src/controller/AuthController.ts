@@ -60,6 +60,7 @@ export class AuthController implements IAuthController {
       let data = await loginUser(auth);
       response = {
         token: data.token,
+        userId: data.id,
         message: `Welcome, ${data.user.name}`,
       };
     } else {
