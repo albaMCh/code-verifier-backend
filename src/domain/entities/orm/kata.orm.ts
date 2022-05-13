@@ -60,7 +60,7 @@ export const getAllKatas = async (
     console.log("Sort:", sort);
 
     // TODO: Eliminar al terminar
-    sort = "-stars.average";
+    //sort = "-stars.average";
 
     // Search all Katas (using pagination)
     await kataModel

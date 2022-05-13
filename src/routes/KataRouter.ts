@@ -31,12 +31,23 @@ katasRouter
     // Pagination
     const page: any = req?.query?.page || 1;
     const limit: any = req?.query?.limit || 10;
+    const user: any = req?.query.user;
+    const sortProperty: any = req?.query.sortProperty;
+    const sortType: any = req?.query.sortType;
 
     LogInfo(`Query Param: ${id}`);
     // Controller Instance to excute method
     const controller: KatasController = new KatasController();
     // Obtain Reponse
-    const response: any = await controller.getKatas(page, limit, id);
+    const response: any = await controller.getKatas(
+      page,
+      limit,
+      id,
+      user,
+      level,
+      sortProperty,
+      sortType
+    );
     // Send to the client the response
     return res.status(200).send(response);
   })
